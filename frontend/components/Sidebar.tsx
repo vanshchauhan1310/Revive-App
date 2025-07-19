@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isVisible, onClose }) => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={() => signOut()}>
+      <TouchableOpacity style={styles.logoutButton} onPress={() => {signOut(); router.push('/(auth)/login');}}>
         <Ionicons name="log-out-outline" size={24} color="#D32F2F" />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>

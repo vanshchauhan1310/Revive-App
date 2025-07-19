@@ -49,7 +49,12 @@ export default function GetStarted() {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <Sidebar isVisible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
+      {/* +++ Pass the currentUserId as a prop to the Sidebar +++ */}
+      <Sidebar 
+        isVisible={isSidebarVisible} 
+        onClose={() => setSidebarVisible(false)}
+        currentUserId={currentUserId} 
+      />
 
       <View style={styles.header}>
         <View style={styles.headerRow}>
@@ -118,7 +123,7 @@ export default function GetStarted() {
         </View>
         <TouchableOpacity style={styles.tabItem} onPress={() => router.push('/CreditEconomy' as any)}>
           <Ionicons name="card-outline" size={22} color="#000" />
-          <Text style={styles.tabText}>Community</Text>
+          <Text style={styles.tabText}>Credits</Text>
         </TouchableOpacity>
         {/* +++ CHANGE: Pass currentUserId to the Inbox screen +++ */}
         <TouchableOpacity 

@@ -1,212 +1,128 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
-import { useUser } from '@clerk/clerk-expo';
-import { supabase } from '@/lib/supabase';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'; // Import useRouter
+import { supabase } from '@/lib/supabase';
 
-const OrdersScreen = () => {
-  const { user } = useUser();
-  const router = useRouter(); // Initialize router
+// This interface now reflects the data from the 'orders' table
+// including the joined item data
+interface Order {
+  id: string;
+  status: boolean;
+  requester_id: string;
+  owner_id: string;
+  itemdata: {
+    name: string;
+    image_url: string;
+  };
+}
+
+export default function OrdersScreen() {
+  const router = useRouter();
+  const { currentUserId } = useLocalSearchParams<{ currentUserId: string }>();
+  
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  interface Order {
-    id: string;
-    name: string;
-    description: string;
-    status?: string;
-    created_at: string;
-    image_url?: string;
-  }
-
-  const fetchOrders = async () => {
-    if (!user?.id) return;
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('itemdata')
-      .select('*')
-      .eq('clerk_user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (!error && data) {
-      setOrders(data);
-    }
-    setLoading(false);
-  };
 
   useEffect(() => {
-    fetchOrders();
-  }, [user]);
-
-  const handleDelete = async (id: string) => {
-    Alert.alert('Delete Order', 'Are you sure you want to delete this order?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive', onPress: async () => {
-          setDeletingId(id);
-          const { error } = await supabase.from('itemdata').delete().eq('id', id);
-          setDeletingId(null);
-          if (!error) {
-            setOrders(orders => orders.filter(order => order.id !== id));
-          } else {
-            Alert.alert('Error', 'Failed to delete order.');
-          }
-        }
+    const fetchOrders = async () => {
+      // Don't fetch if we don't know who the current user is
+      if (!currentUserId) {
+        setLoading(false);
+        return;
       }
-    ]);
-  };
+      
+      setLoading(true);
+      try {
+        // This query fetches from the 'orders' table.
+        // It joins with 'itemdata' to get the item's name and image.
+        // It filters for orders where the current user is either the requester OR the owner.
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*, itemdata(name, image_url)')
+          .or(`requester_id.eq.${currentUserId},owner_id.eq.${currentUserId}`)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setOrders(data || []);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        Alert.alert("Error", "Could not fetch your orders.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [currentUserId]);
 
   if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#FF9800" />
-      </View>
-    );
+    return <View style={styles.centered}><ActivityIndicator size="large" color="#FF9800" /></View>;
   }
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      {/* Header with back button */}
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.title}>My Orders</Text>
-        <View style={{ width: 24 }} /> {/* Spacer */}
+        <View style={{ width: 24 }} />
       </View>
 
-      <View style={styles.container}>
-        {orders.length === 0 ? (
-          <View style={styles.centered}>
-            <Text style={styles.emptyText}>You have no orders yet.</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={orders}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
+      {orders.length === 0 ? (
+        <View style={styles.centered}>
+          <Text style={styles.emptyText}>You have no orders yet.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={orders}
+          keyExtractor={item => item.id}
+          contentContainerStyle={{ padding: 16 }}
+          renderItem={({ item }) => {
+            const isRequestSent = item.requester_id === currentUserId;
+            return (
               <View style={styles.orderCard}>
-                {item.image_url ? (
-                  <Image source={{ uri: item.image_url }} style={styles.orderImage} />
-                ) : null}
-                <Text style={styles.orderName}>{item.name}</Text>
-                <Text style={styles.orderDesc}>{item.description}</Text>
-                <Text style={styles.orderStatus}>{item.status ? `Status: ${item.status}` : ''}</Text>
-                <Text style={styles.orderDate}>{new Date(item.created_at).toLocaleString()}</Text>
-                <View style={styles.buttonRow}>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDelete(item.id)}
-                    disabled={deletingId === item.id}
-                  >
-                    <Ionicons name="trash-outline" size={20} color="#fff" />
-                    <Text style={styles.deleteButtonText}>{deletingId === item.id ? 'Deleting...' : 'Delete'}</Text>
-                  </TouchableOpacity>
+                <Image 
+                  source={{ uri: item.itemdata?.image_url || 'https://via.placeholder.com/100' }} 
+                  style={styles.itemImage} 
+                />
+                <View style={styles.itemDetails}>
+                  <Text style={styles.itemName}>{item.itemdata?.name || 'Item not found'}</Text>
+                  <View style={[styles.tag, isRequestSent ? styles.sentTag : styles.receivedTag]}>
+                    <Text style={styles.tagText}>
+                      {isRequestSent ? 'Request Sent' : 'Request Received'}
+                    </Text>
+                  </View>
+                  <Text style={styles.statusText}>
+                    Status: 
+                    <Text style={{ fontWeight: 'bold', color: item.status ? '#28A745' : '#6c757d' }}>
+                      {item.status ? ' Accepted' : ' Pending'}
+                    </Text>
+                  </Text>
                 </View>
               </View>
-            )}
-          />
-        )}
-      </View>
+            );
+          }}
+        />
+      )}
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  safeContainer: {
-    flex: 1,
-    backgroundColor: '#FFF4E5',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF4E5',
-    paddingHorizontal: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#FFE0B2',
-    backgroundColor: '#FFF4E5',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  orderCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  orderImage: {
-    width: '100%',
-    height: 180,
-    borderRadius: 10,
-    marginBottom: 10,
-    backgroundColor: '#eee',
-  },
-  orderName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 4,
-  },
-  orderDesc: {
-    fontSize: 15,
-    color: '#555',
-    marginBottom: 6,
-  },
-  orderStatus: {
-    fontSize: 14,
-    color: '#4CAF50',
-    marginBottom: 4,
-  },
-  orderDate: {
-    fontSize: 13,
-    color: '#888',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#D32F2F',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    marginLeft: 8,
-    fontSize: 15,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFF4E5',
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#888',
-    fontSize: 16,
-    marginTop: 40,
-  },
+    container: { flex: 1, backgroundColor: '#FFF' },
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee', backgroundColor: '#FFF4E5' },
+    title: { fontSize: 20, fontWeight: 'bold' },
+    emptyText: { fontSize: 16, color: '#777', textAlign: 'center' },
+    orderCard: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 12, padding: 12, marginVertical: 8, elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 2 } },
+    itemImage: { width: 80, height: 80, borderRadius: 8, marginRight: 12, backgroundColor: '#eee' },
+    itemDetails: { flex: 1, justifyContent: 'center' },
+    itemName: { fontSize: 16, fontWeight: 'bold', marginBottom: 6, color: '#333' },
+    tag: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginBottom: 6 },
+    sentTag: { backgroundColor: '#E0F7FA' }, // Light blue
+    receivedTag: { backgroundColor: '#E8F5E9' }, // Light green
+    tagText: { fontSize: 12, fontWeight: '600' },
+    statusText: { fontSize: 14, color: '#6c757d' },
 });
-
-export default OrdersScreen;
