@@ -198,12 +198,21 @@ export default function ProductScreen() {
             <Text style={styles.productTitle}>{product.name}</Text>
             <Text style={styles.productDesc}>{product.description}</Text>
             
-            {/* Price Section */}
-            {product.price && (
+            {/* Price Section: show both rupees and credits */}
+            {(product.price || product.price_credits) && (
               <>
                 <Text style={styles.sectionTitle}>Price</Text>
                 <View style={styles.priceContainer}>
-                  <Text style={styles.priceValue}>{product.price} credits</Text>
+                  {/* show rupee price if available */}
+                  <Text style={styles.priceValue}>
+                    {product.price ? `₹${Number(product.price).toFixed(2)}` : ''}
+                  </Text>
+                  {/* show credits (prefer stored price_credits else derive) */}
+                  <View style={styles.priceTag}>
+                    <Text style={styles.priceTagText}>
+                      {product.price_credits ? `${product.price_credits} credits` : `${Math.round((product.price || 0)/100)} credits`}
+                    </Text>
+                  </View>
                 </View>
               </>
             )}

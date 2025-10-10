@@ -24,46 +24,46 @@ interface TeamMember {
   avatar: string;
   expertise: string[];
   quote: string;
-  color: string[];
+  color: readonly [string, string];
 }
 
 const teamMembers: TeamMember[] = [
   {
     id: 1,
-    name: "Vansh Kumar",
+    name: "Vansh Raj Chauhan",
     role: "Lead Developer & Founder",
     description: "Visionary developer who conceptualized ReVive to tackle food waste through community-driven solutions",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
+    avatar: "https://i.pinimg.com/736x/9e/c0/f8/9ec0f877571edc437f89c15c08081533.jpg",
     expertise: ["React Native", "Node.js", "Full-Stack Development"],
     quote: "ReVive transforms the way we think about waste - turning surplus into opportunity, connecting communities through conscious sharing.",
     color: ['#667eea', '#764ba2']
   },
   {
     id: 2,
-    name: "Priya Sharma",
-    role: "UI/UX Designer",
+    name: "Adrika Pradhan",
+    role: "Developer and Software Architecture Designer",
     description: "Design strategist crafting intuitive experiences that make sustainable living effortless and engaging",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face",
-    expertise: ["UI/UX Design", "Figma", "Design Systems"],
+    avatar: "https://i.pinimg.com/736x/7f/54/72/7f5472b9d1ed7f5435dbb8983f793131.jpg",
+    expertise: ["React Native", "Business Devlopment", "Design Systems"],
     quote: "Beautiful design shouldn't just look good - it should do good. ReVive makes sustainability visual, accessible, and inspiring.",
     color: ['#f093fb', '#f5576c']
   },
   {
     id: 3,
-    name: "Arjun Mehta",
+    name: "Dhruv Bhattacharaya",
     role: "Backend Engineer",
     description: "Database architect and API specialist ensuring ReVive's infrastructure scales with our growing community",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face",
+    avatar: "https://i.pinimg.com/736x/6b/b6/1c/6bb61c9bf2398f4bc6c0b3155da7ca85.jpg",
     expertise: ["Supabase", "PostgreSQL", "API Architecture"],
     quote: "Behind every shared meal in ReVive is a robust system that connects hearts, reduces waste, and builds communities.",
     color: ['#4facfe', '#00f2fe']
   },
   {
     id: 4,
-    name: "Sneha Patel",
+    name: "Rahul Verma",
     role: "Product Manager",
     description: "Sustainability champion orchestrating product strategy to maximize ReVive's environmental and social impact",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face",
+    avatar: "https://i.pinimg.com/1200x/81/2d/d6/812dd66024ea87e0ed86cfa5f79084f9.jpg",
     expertise: ["Product Strategy", "Impact Measurement", "Community Growth"],
     quote: "ReVive isn't just preventing food waste - we're cultivating a culture where sharing is caring for our planet's future.",
     color: ['#43e97b', '#38f9d7']
@@ -119,7 +119,7 @@ export default function Team() {
         </View>
         
         <View style={styles.quoteContainer}>
-          <Feather name="quote" size={16} color="rgba(255,255,255,0.8)" />
+          <Feather name="message-square" size={16} color="rgba(255,255,255,0.8)" />
           <Text style={styles.memberQuote}>{member.quote}</Text>
         </View>
       </LinearGradient>
@@ -173,8 +173,8 @@ export default function Team() {
         <View style={styles.missionSection}>
           <MaterialIcons name="eco" size={32} color="#22c55e" />
           <Text style={styles.missionText}>
-            "We believe in the power of community to create a more sustainable world. 
-            ReVive isn't just an app - it's a movement toward conscious consumption and sharing."
+            &quot;We believe in the power of community to create a more sustainable world. 
+            ReVive isn&apos;t just an app - it&apos;s a movement toward conscious consumption and sharing.&quot;
           </Text>
         </View>
 
@@ -193,7 +193,7 @@ export default function Team() {
                 colors={['#f8fafc', '#e2e8f0']}
                 style={styles.quoteGradient}
               >
-                <Feather name="quote" size={24} color="#64748b" style={styles.quoteIcon} />
+                <Feather name="message-square" size={24} color="#64748b" style={styles.quoteIcon} />
                 <Text style={styles.quoteText}>{quote.text}</Text>
                 <Text style={styles.quoteAuthor}>— {quote.author}</Text>
               </LinearGradient>
@@ -208,7 +208,7 @@ export default function Team() {
             style={styles.contactGradient}
           >
             <MaterialIcons name="handshake" size={40} color="white" />
-            <Text style={styles.contactTitle}>Let's Build Together</Text>
+            <Text style={styles.contactTitle}>Let&#39;s Build Together</Text>
             <Text style={styles.contactDescription}>
               Join us in creating a more sustainable future through technology and community.
             </Text>

@@ -124,6 +124,10 @@ const YourProducts: React.FC<YourProductsProps> = (props) => {
       const testResponse = await fetch(`${API_BASE_URL}/api/test`);
       console.log('📡 Test API Response status:', testResponse.status);
       
+      // compute credits price for storage
+      const rupeePrice = parseFloat(editForm.price) || 0;
+      const creditsPrice = Math.round(rupeePrice / 100);
+
       const response = await fetch(`${API_BASE_URL}/api/products/${editingProduct.id}`, {
         method: 'PUT',
         headers: {
@@ -135,7 +139,8 @@ const YourProducts: React.FC<YourProductsProps> = (props) => {
           category: editForm.category,
           condition: editForm.condition,
           location: editForm.location,
-          price: parseFloat(editForm.price) || 0,
+          price: rupeePrice || null,
+          price_credits: creditsPrice,
         }),
       });
 
@@ -158,10 +163,10 @@ const YourProducts: React.FC<YourProductsProps> = (props) => {
         
         console.log('✅ Product updated successfully:', updatedProduct);
         
-        // Update the product in the local state
+        // Update the product in the local state (preserve types)
         setProducts(products.map(p => 
           p.id === editingProduct.id 
-            ? { ...p, ...editForm, price: parseFloat(editForm.price) || 0 }
+            ? { ...p, ...editForm, price: rupeePrice, price_credits: creditsPrice }
             : p
         ));
         
