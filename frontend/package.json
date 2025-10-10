@@ -60,7 +60,7 @@
     "@babel/core": "^7.25.2",
     "@react-native-community/cli": "^19.1.1",
     "@types/react": "^19.1.8",
-      "@expo/tsconfig": "^5.0.0",
+    
     "@types/react-native": "^0.73.0",
     "@types/react-router-dom": "^5.3.3",
     "eslint": "^9.25.0",

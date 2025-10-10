@@ -6,7 +6,7 @@ Modular backend server for the ReVive app that handles user management, credit s
 
 The backend is organized into modular components:
 
-```
+```sh
 backend/
 ├── index.ts          # Main server entry point
 ├── user/             # User management module
@@ -19,18 +19,21 @@ backend/
 
 ## 🚀 Setup
 
-1. Install dependencies:
-```bash
-bun install
-```
+- Install dependencies:
 
-2. Set up environment variables:
-Create a `.env` file in the backend directory with:
-```
+  ```bash
+  bun install
+  ```
+
+- Set up environment variables:
+Add a `.env` file in the backend directory with:
+
+```sh
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-3. Run the server:
+- Run the server:
+
 ```bash
 # Development mode with hot reload
 bun run dev
@@ -44,6 +47,7 @@ bun run start
 ### 👤 User Management (`/api/users`)
 
 **POST** - Create a new user
+
 ```json
 {
   "clerk_user_id": "user_123",
@@ -55,18 +59,22 @@ bun run start
 ```
 
 **GET** - Get all users or specific user
+
 - `/api/users` - Get all users
 - `/api/users?clerk_user_id=user_123` - Get specific user
 
 **PUT** - Update user
+
 - `/api/users?clerk_user_id=user_123` with body
 
 **DELETE** - Delete user
+
 - `/api/users?clerk_user_id=user_123`
 
 ### 💰 Credit System
 
 **POST** `/api/transfer` - Transfer credits
+
 ```json
 {
   "senderId": "user_123",
@@ -81,6 +89,7 @@ bun run start
 ### 💬 Messaging System
 
 **POST** `/api/send-message` - Send a message
+
 ```json
 {
   "sender_id": "user_123",
@@ -93,6 +102,7 @@ bun run start
 **GET** `/api/messages/:chatId` - Get chat messages
 
 **POST** `/api/create-chat` - Create a new chat
+
 ```json
 {
   "chat_id": "chat_789",
@@ -108,6 +118,7 @@ bun run start
 ## 🗄️ Database Schema
 
 ### Users Table
+
 ```sql
 CREATE TABLE public.users (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -124,6 +135,7 @@ CREATE TABLE public.users (
 ```
 
 ### Credit Stack Table
+
 ```sql
 CREATE TABLE public.credit_stack (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -136,6 +148,7 @@ CREATE TABLE public.credit_stack (
 ```
 
 ### Messages Table
+
 ```sql
 CREATE TABLE public.messages (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -148,6 +161,7 @@ CREATE TABLE public.messages (
 ```
 
 ### Chats Table
+
 ```sql
 CREATE TABLE public.chats (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -171,6 +185,6 @@ CREATE TABLE public.chats (
 ## 🚀 Server Information
 
 - **Port**: 3001
-- **URL**: http://localhost:3001
+- **URL**: [http://localhost:3001](http://localhost:3001)
 - **Hot Reload**: Enabled in development
 - **Modules**: User Management, Credit System, Messaging

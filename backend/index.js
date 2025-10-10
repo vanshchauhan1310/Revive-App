@@ -505,6 +505,45 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
+// POST /api/products - Create a new product (server-side computes price_credits)
+app.post('/api/products', async (req, res) => {
+  try {
+    const { user_id, name, description, category, condition, location, price } = req.body;
+
+    if (!user_id || !name) {
+      return res.status(400).json({ error: 'user_id and name are required' });
+    }
+
+    // Convert incoming rupee price (if provided) to credits but DO NOT persist rupee price.
+    const parsedPrice = price !== undefined && price !== null ? parseFloat(price) : null;
+    const safePrice = typeof parsedPrice === 'number' && !Number.isNaN(parsedPrice) ? Math.max(0, parsedPrice) : null;
+    const priceCredits = safePrice !== null ? Math.round(safePrice / 100) : null; // Math.round per policy
+
+    const insertPayload = {
+      user_id,
+      name,
+      description: description || null,
+      category: category || null,
+      condition: condition || null,
+      location: location || null,
+      created_at: new Date().toISOString(),
+    };
+    // Persist only credits (not rupee price)
+    if (priceCredits !== null) insertPayload.price_credits = priceCredits;
+
+    const { data, error } = await supabase.from('itemdata').insert([insertPayload]).select().single();
+    if (error) {
+      console.error('❌ Supabase error creating product:', error);
+      return res.status(500).json({ error: 'Failed to create product', supabaseError: error });
+    }
+
+    return res.status(201).json({ success: true, product: data });
+  } catch (err) {
+    console.error('💥 Server error creating product:', err);
+    return res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
 // PUT /api/products/:productId - Update product
 app.put('/api/products/:productId', async (req, res) => {
   try {
@@ -527,17 +566,26 @@ app.put('/api/products/:productId', async (req, res) => {
 
     console.log('🔄 Updating product with ID:', productId);
     
+    // Compute credits from rupee price if provided: 1 credit = ₹100, Math.round per policy
+    const parsedPrice = price !== undefined && price !== null ? parseFloat(price) : null;
+    const safePrice = typeof parsedPrice === 'number' && !Number.isNaN(parsedPrice) ? Math.max(0, parsedPrice) : null;
+    const priceCredits = safePrice !== null ? Math.round(safePrice / 100) : null; // allow 0-credit items
+
+    // Build update payload — do NOT persist rupee price, only credits
+    const updatePayload = {
+      name: name,
+      description: description || null,
+      category: category || null,
+      condition: condition || null,
+      location: location || null,
+    };
+    // always set price_credits when price provided
+    if (priceCredits !== null) updatePayload.price_credits = priceCredits;
+
     // Update product in itemdata table
     const { data, error } = await supabase
       .from('itemdata')
-      .update({
-        name: name,
-        description: description || null,
-        category: category || null,
-        condition: condition || null,
-        location: location || null,
-        price: price || null,
-      })
+      .update(updatePayload)
       .eq('id', productId)
       .select()
       .single();
@@ -881,33 +929,60 @@ app.post('/api/orders/:orderId/deliver', async (req, res) => {
     }
 
 
-    // Calculate bill amounts
-    const productPrice = parseFloat(existingOrder.itemdata.price) || 0;
-    const platformFee = productPrice * 0.02; // 2% platform fee
-    const totalAmount = productPrice + platformFee;
+    // Use stored credits on the item. Prefer `price_credits`; fallback to 0.
+    const credits = existingOrder.itemdata?.price_credits ? parseInt(existingOrder.itemdata.price_credits, 10) : 0;
+
+    // Fees in credits (platform and creator). Use Math.floor to avoid fractional credits.
+    const platformFeeCredits = Math.floor(credits * 0.02); // 2%
+    const creatorCommissionCredits = Math.floor(credits * 0.03); // 3% to creator
+
+    // Buyer pays 'credits' total. Seller receives remainder after fees.
+    const sellerCredits = credits - platformFeeCredits - creatorCommissionCredits;
 
     // Generate bill ID
     const billId = `BILL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Create bill record
+
+    // Create bill record in credits (store credit values so downstream payment logic works in credits)
+    const billPayload = {
+      bill_id: billId,
+      order_id: orderId,
+      requester_id: existingOrder.requester_id,
+      // store credit amounts in the numeric fields used by payment flow
+      amount: credits,
+      amount_credits: credits,
+      platform_fee: platformFeeCredits,
+      platform_fee_credits: platformFeeCredits,
+      creator_commission_credits: creatorCommissionCredits,
+      total_amount: credits + platformFeeCredits, // total credits required (product + platform fee)
+      total_credits: credits + platformFeeCredits,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    };
+
     const { error: billError } = await supabase
       .from('bills')
-      .insert([{
-        bill_id: billId,
-        order_id: orderId,
-        requester_id: existingOrder.requester_id,
-        amount: productPrice,
-        platform_fee: platformFee,
-        total_amount: totalAmount,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      }]);
+      .insert([billPayload]);
 
     if (billError) {
+      console.error('Failed to generate bill:', billError);
       return res.status(500).json({ error: 'Failed to generate bill', supabaseError: billError });
     }
 
-    // Update order status and add OTP
+    // Call Supabase RPC to finalize the order (server-side transaction)
+    try {
+      const rpcResponse = await supabase.rpc('finalize_order', { p_order_id: orderId });
+      // rpcResponse may be an array with the JSON payload depending on supabase client; normalize
+      const rpcResult = Array.isArray(rpcResponse) ? rpcResponse[0] : rpcResponse;
+      console.log('RPC finalize_order response:', rpcResult);
+      if (rpcResult && rpcResult.error) {
+        return res.status(400).json({ error: rpcResult.error });
+      }
+    } catch (rpcErr) {
+      console.error('RPC finalize_order failed:', rpcErr);
+      return res.status(500).json({ error: 'Failed to finalize order via RPC', details: rpcErr });
+    }
+
+    // update order status and add OTP locally to keep parity with RPC
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .update({ 
@@ -918,7 +993,6 @@ app.post('/api/orders/:orderId/deliver', async (req, res) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', orderId)
-      .eq('owner_id', owner_id)
       .select()
       .single();
 
@@ -1002,15 +1076,15 @@ app.post('/api/orders/:orderId/generate-bill', async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Calculate bill amounts
-    const productPrice = parseFloat(orderData.itemdata.price) || 0;
-    const platformFee = productPrice * 0.02; // 2% platform fee
-    const totalAmount = productPrice + platformFee;
+  // Calculate bill amounts in credits using stored price_credits
+  const credits = orderData.itemdata?.price_credits ? parseInt(orderData.itemdata.price_credits, 10) : 0;
+  const platformFeeCredits = Math.floor(credits * 0.02); // 2% platform fee in credits
+  const totalCredits = credits + platformFeeCredits;
 
-    console.log('💰 Bill calculation:', {
-      productPrice,
-      platformFee,
-      totalAmount
+    console.log('💰 Bill calculation (credits):', {
+      productCredits: credits,
+      platformFeeCredits,
+      totalCredits
     });
 
     // Generate bill ID
@@ -1018,16 +1092,19 @@ app.post('/api/orders/:orderId/generate-bill', async (req, res) => {
     
     console.log('🔄 Generating bill for order');
     
-    // Create bill record
+    // Create bill record in credits (amount and total_amount will be credit amounts)
     const { data: billData, error: billError } = await supabase
       .from('bills')
       .insert([{
         bill_id: billId,
         order_id: orderId,
         requester_id,
-        amount: productPrice,
-        platform_fee: platformFee,
-        total_amount: totalAmount,
+        amount: credits,
+        amount_credits: credits,
+        platform_fee: platformFeeCredits,
+        platform_fee_credits: platformFeeCredits,
+        total_amount: totalCredits,
+        total_credits: totalCredits,
         status: 'pending', // pending, paid, cancelled
         created_at: new Date().toISOString(),
       }])
