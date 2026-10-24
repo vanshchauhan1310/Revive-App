@@ -1,40 +1,31 @@
 {
-  "name": "ecoshare-backend",
-  "version": "2.0.0",
-  "description": "EcoShare API: authenticated REST layer over Supabase, with AI calls proxied to ml-service",
+  "name": "backend",
+  "module": "index.js",
   "type": "module",
   "private": true,
-  "main": "src/server.js",
-  "engines": {
-    "node": ">=20"
+  "devDependencies": {
+    "@types/bun": "latest"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "eslint ."
+    "start": "node index.js",
+    "dev": "node --watch index.js"
   },
-  "license": "MIT",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.118.0",
-    "cors": "^2.8.6",
-    "dotenv": "^18.0.9",
-    "express": "^5.3.0",
-    "express-rate-limit": "^8.7.1",
-    "helmet": "^8.3.0",
-    "pino": "^10.4.0",
-    "pino-http": "^11.0.0",
-    "zod": "^4.6.7"
+    "@supabase/supabase-js": "^2.50.1",
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.4.0",
+    "jsonwebtoken": "^9.0.2"
   },
-  "devDependencies": {
-    "@electric-sql/pglite": "0.5.8",
-    "@electric-sql/pglite-pgvector": "0.0.9",
-    "@eslint/js": "^10.0.1",
-    "eslint": "^10.13.0",
-    "globals": "^17.13.0",
-    "pino-pretty": "^13.2.0",
-    "supertest": "^7.3.1",
-    "vitest": "^5.0.5"
-  }
+  "description": "Backend server for ReVive app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

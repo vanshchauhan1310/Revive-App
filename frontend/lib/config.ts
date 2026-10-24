@@ -1,15 +1,8 @@
-// Public runtime configuration (EXPO_PUBLIC_* values are embedded in the app bundle,
-// so only publishable values belong here; never a service-role key).
-function required(name: string, value: string | undefined): string {
-  if (!value) {
-    throw new Error(`Missing ${name}. Copy frontend/.env.example to frontend/.env and fill it in.`);
-  }
-  return value;
-}
-
+// Configuration file for environment variables
 export const config = {
-  apiUrl: required('EXPO_PUBLIC_API_URL', process.env.EXPO_PUBLIC_API_URL).replace(/\/$/, ''),
-  supabaseUrl: required('EXPO_PUBLIC_SUPABASE_URL', process.env.EXPO_PUBLIC_SUPABASE_URL).replace(/\/$/, ''),
-  supabaseAnonKey: required('EXPO_PUBLIC_SUPABASE_ANON_KEY', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY),
-  googleAuthEnabled: process.env.EXPO_PUBLIC_GOOGLE_AUTH === 'true',
+  API_BASE_URL: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.58.90:3000',
+  SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://bzqqeativrabfbcqlzzl.supabase.co',
+  SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6cXFlYXRpdnJhYmZiY3FsenpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2NTQ3ODksImV4cCI6MjA2NjIzMDc4OX0.sY1Y_g0GG2WIM36P4mMEB4toxtGC_HqOU4olWMsNxiI',
 };
+
+export default config; 

@@ -1,7 +1,0 @@
-# Training / MLOps pipeline dependencies (not needed by the API container)
--r requirements.in
-pandas
-pyarrow
-mlflow
-psycopg[binary]
-pytest

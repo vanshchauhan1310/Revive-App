@@ -1,29 +1,22 @@
 {
   "expo": {
-    "name": "EcoShare",
-    "slug": "ecoshare",
+    "name": "frontend",
+    "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "ecoshare",
+    "scheme": "frontend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "app.ecoshare",
-      "infoPlist": {
-        "NSCameraUsageDescription": "EcoShare uses the camera so you can photograph items you share.",
-        "NSPhotoLibraryUsageDescription": "EcoShare lets you choose photos of items you share.",
-        "NSLocationWhenInUseUsageDescription": "EcoShare uses your approximate location to show nearby items."
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#244D3A"
+        "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "app.ecoshare"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
@@ -32,33 +25,18 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store",
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "EcoShare lets you choose photos of items you share.",
-          "cameraPermission": "EcoShare uses the camera so you can photograph items you share."
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "EcoShare uses your approximate location to show nearby items."
-        }
-      ],
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 180,
+          "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#F7F5EE"
+          "backgroundColor": "#ffffff"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "primaryColor": "#244D3A"
+    }
   }
 }
