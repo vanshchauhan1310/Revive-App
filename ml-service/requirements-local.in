@@ -1,0 +1,5 @@
+# Optional: run the open Hugging Face models locally (free, no Inference credits needed).
+-r requirements.in
+torch
+transformers>=5
+pillow

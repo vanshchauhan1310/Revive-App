@@ -1,54 +1,67 @@
-// app/_layout.tsx
-import { ClerkProvider } from '@clerk/clerk-expo';
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { CaptchaFallback } from '../components/CaptchaFallback';
-import { SupabaseAuthProvider } from '../Providers/SupabaseAuthProvider';
+import { useFonts } from 'expo-font';
+import { PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
+import { CelebrationProvider } from '@/components/motion';
+import { Loading, Screen, colors } from '@/components/ui';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+function RootNavigator() {
+  const { initializing, session } = useAuth();
+  if (initializing) {
+    return <Screen><Loading label="Starting EcoShare" /></Screen>;
+  }
+  const signedIn = Boolean(session);
+  return (
+    <Stack screenOptions={{ headerShown: false, animation: 'fade_from_bottom', animationDuration: 280, contentStyle: { backgroundColor: colors.background } }}>
+      <Stack.Protected guard={signedIn}>
+        <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+        <Stack.Screen name="listing/[id]" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="listing/edit/[id]" />
+        <Stack.Screen name="chat/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="exchanges/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="exchanges/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="credits" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="notifications" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="my-listings" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="profile-edit" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="moderation" options={{ animation: 'slide_from_right' }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!signedIn}>
+        <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="auth-callback" />
+      <Stack.Screen name="reset-password" />
+      <Stack.Screen name="about" />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold,
+    Inter_400Regular, Inter_500Medium, Inter_600SemiBold,
+  });
+  const ready = fontsLoaded || Boolean(fontError);
+  useEffect(() => { if (ready) SplashScreen.hideAsync().catch(() => {}); }, [ready]);
+  if (!ready) return null;
+
   return (
-    <SupabaseAuthProvider>
-      <ClerkProvider 
-        publishableKey="pk_test_bG95YWwtZHVjay01Mi5jbGVyay5hY2NvdW50cy5kZXYk"
-        appearance={{
-          elements: {
-            formButtonPrimary: {
-              backgroundColor: '#fb923c',
-              '&:hover': {
-                backgroundColor: '#ea580c'
-              }
-            }
-          }
-        }}
-        signInUrl="/login"
-        signUpUrl="/sign-up"
-        signInFallbackRedirectUrl="/GetStarted"
-        afterSignUpUrl="/login"
-      >
-        <CaptchaFallback />
-        <SafeAreaProvider>
-          <StatusBar style="auto" />
-          <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
-            <Stack.Screen name="index" options={{ title: 'Welcome' }} />
-            <Stack.Screen name="(auth)/login" options={{ title: 'Login' }} />
-            <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
-            <Stack.Screen name="GetStarted" />
-            <Stack.Screen name="FreeFood" />
-            <Stack.Screen name="FreeNonFood" />
-            <Stack.Screen name="ForSale" />
-            <Stack.Screen name="Wanted" />
-            <Stack.Screen name="Explore" />
-            <Stack.Screen name="Message" />
-            <Stack.Screen name="Chat" />
-            <Stack.Screen name="ProductScreen" />
-            <Stack.Screen name="Notifications" />
-            
-            {/* Main Tab Screens */}
-            {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} /> */}
-          </Stack>
-        </SafeAreaProvider>
-      </ClerkProvider>
-    </SupabaseAuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <CelebrationProvider>
+          <StatusBar style="dark" />
+          <RootNavigator />
+        </CelebrationProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

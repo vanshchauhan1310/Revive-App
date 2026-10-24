@@ -1,0 +1,22 @@
+{
+  "version": "impact_factors.v1",
+  "notes": "Indicative cradle-to-shelf emission factors (kg CO2e per kg of product) and default item weights, compiled from public LCA averages (e.g. Poore & Nemecek 2018 food meta-analysis; WRAP textiles/electricals reports). Non-food savings are scaled by a displacement rate because not every reuse avoids a new purchase. These are estimates for user motivation, not certified carbon accounting.",
+  "displacement_rate_non_food": 0.6,
+  "portion_kg": 0.35,
+  "categories": {
+    "cooked_meal":   {"kg_co2e_per_kg": 2.5, "default_kg": 0.5},
+    "baked_goods":   {"kg_co2e_per_kg": 1.6, "default_kg": 0.5},
+    "produce":       {"kg_co2e_per_kg": 0.9, "default_kg": 1.0},
+    "dairy":         {"kg_co2e_per_kg": 3.2, "default_kg": 1.0},
+    "packaged_food": {"kg_co2e_per_kg": 2.0, "default_kg": 0.5},
+    "beverages":     {"kg_co2e_per_kg": 0.8, "default_kg": 1.0},
+    "clothing":      {"kg_co2e_per_kg": 15.0, "default_kg": 0.6},
+    "books":         {"kg_co2e_per_kg": 2.5, "default_kg": 0.5},
+    "electronics":   {"kg_co2e_per_kg": 30.0, "default_kg": 1.5},
+    "furniture":     {"kg_co2e_per_kg": 3.5, "default_kg": 15.0},
+    "kitchenware":   {"kg_co2e_per_kg": 4.0, "default_kg": 1.0},
+    "toys":          {"kg_co2e_per_kg": 6.0, "default_kg": 0.7},
+    "sports":        {"kg_co2e_per_kg": 5.0, "default_kg": 2.0},
+    "other":         {"kg_co2e_per_kg": 3.0, "default_kg": 1.0}
+  }
+}

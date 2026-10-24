@@ -1,0 +1,11 @@
+# Supabase CLI config for local development (`supabase start`). Hosted projects are
+# configured in the dashboard with the same values.
+project_id = "ecoshare"
+
+[auth]
+site_url = "ecoshare://"
+additional_redirect_urls = ["ecoshare://**", "exp://**", "http://localhost:8081/**"]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
